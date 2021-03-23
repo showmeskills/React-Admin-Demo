@@ -12,7 +12,7 @@ const {
     addLessLoader
 } = require('customize-cra')
 
-const theme = require('./theme')
+const theme = require('./LessVars')
 module.exports = override(
     addDecoratorsLegacy(),
     fixBabelImports('import',{
