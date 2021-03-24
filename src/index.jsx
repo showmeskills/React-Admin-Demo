@@ -2,8 +2,24 @@ import React from 'react';
 import {render} from 'react-dom';
 import App from './App';
 import './assets/less/index.less';
+import {HashRouter as Router, Route, Switch,Redirect} from 'react-router-dom';
+import {mainRouter} from './routes'
 
 render(
-    <App/>,
+    <Router>
+        <Switch>
+          <Route path='/admin' render={(routeProps)=>{
+              //TODO:需要登录才能访问/admin(requirements of authorities to access admin page)
+              return <App {...routeProps}/>
+          }}/>
+          {
+              mainRouter.map(route=>{
+                  return <Route key={route.pathname} path={route.pathname} component={route.component}/>
+              })
+          }
+          <Redirect to='/admin' from='/' exact />
+          <Redirect to='/404' from='*'/>
+        </Switch>
+    </Router>,
     document.getElementById('root')
 )
