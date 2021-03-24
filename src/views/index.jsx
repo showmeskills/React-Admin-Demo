@@ -1,8 +1,8 @@
 //lazy loading
-import Loadable from 'react-loadable';
+import Loadable from './Loadable';
 import {Loading} from '../components'
 
-
+//loadable theory
 const Dashboard = Loadable ({
     loader:()=>import('./Dashboard'),
     loading:Loading
