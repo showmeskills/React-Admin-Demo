@@ -3,7 +3,7 @@ import {render} from 'react-dom';
 import App from './App';
 import './assets/less/index.less';
 import {HashRouter as Router, Route, Switch,Redirect} from 'react-router-dom';
-import {mainRouter} from './routes'
+import {mainRoutes} from './routes'
 
 render(
     <Router>
@@ -13,7 +13,7 @@ render(
               return <App {...routeProps}/>
           }}/>
           {
-              mainRouter.map(route=>{
+              mainRoutes.map(route=>{
                   return <Route key={route.pathname} path={route.pathname} component={route.component}/>
               })
           }
