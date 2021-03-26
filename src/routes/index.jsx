@@ -10,7 +10,6 @@ import {
 import {
     DashboardOutlined,
     UnorderedListOutlined,
-    EditOutlined,
     SettingOutlined
 } from '@ant-design/icons';
 
@@ -42,12 +41,10 @@ export const adminRoutes =[
         exact: true,
         icon:UnorderedListOutlined
     },
+    //children routes
     {
         pathname:'/admin/article/edit/:id',
         component:ArticleEdit,
-        title:'ArticleEdit',
-        isNav:true,
-        icon:EditOutlined
     },
     {
         pathname:'/admin/settings',
