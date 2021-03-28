@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 import moment from 'moment'
+import XLSX from 'xlsx'
 
 import {Card,Tag,Table,Button} from 'antd'
 
 import {getArtilces} from '../../axios'
-
+//存放多个button 组件
+const ButtonGroup = Button.Group
 
 const titleDisplayMap = {
   id:'id',
@@ -15,15 +17,21 @@ const titleDisplayMap = {
 }
 
 
+
+
 export default class ArticleList extends Component {
 
     state = {
         dataSource:[],
         columns:[],
         total:0,
+        isLoading:false,
+        offset:0,
+        limited:10,
     }
     createColumns = (columnKeys)=>{
-     return columnKeys.map(item=>{
+       
+    const columns = columnKeys.map(item=>{
        if(item==='amount'){
          return{
            title: titleDisplayMap[item],
@@ -59,11 +67,28 @@ export default class ArticleList extends Component {
          key:item
        }
      })
+     //额外添加columns
+     columns.push({
+       title:'操作',
+       key:'actions',
+       render(){
+        return(
+          <ButtonGroup>
+            <Button size="small" type='primary'>添加</Button>
+            <Button  size="small" type='danger'>删除</Button>
+          </ButtonGroup>
+        )
+       }
+     })
+     return columns
     }
 
     //customize a function to request data
     getData=()=>{
-      getArtilces()
+      this.setState({
+        isLoading:true,
+      })
+      getArtilces(this.state.offset,this.state.limited)
       .then(res=>{
         const columnKeys = Object.keys(res.list[0])
         const columns = this.createColumns(columnKeys)
@@ -73,26 +98,89 @@ export default class ArticleList extends Component {
               columns
           })
       })
+      .catch(err=>{
+        //处理错误,虽然有全局处理
+      })
+      .finally(()=>{
+        this.setState({
+          isLoading:false,
+        })
+      })
     }
+
+
+    onPageChange=(page,pageSize)=>{
+      //console.log(page,pageSize)
+      this.setState({
+        offset:(page - 1) *pageSize,
+        limit:pageSize
+      },()=>{
+        //处理异步请求
+        this.getData()
+      })
+    } 
+    //切换页面数量的是回到首页还是留在当前页
+    onShowSizeChange = (current,size)=>{
+      this.setState({
+        offset:0,
+        limit:size,
+      },()=>{
+        //处理异步请求
+        this.getData()
+      })
+    }
+
     componentDidMount(){
        this.getData()
     }
+
+    toExcel=()=>{
+      //在实际的项目中,前端发送一个ajax请求到后端,后端返回一个文件下载的地址
+      //然后前端使用xlsx的来组合数据
+      //组合数据
+      const data = [Object.keys(this.state.dataSource[0])]//[["id","title","author","amount","createAt"],["数据id"...]]
+      for(let i = 0; i < this.state.dataSource.length; i++){
+        //data.push(Object.values(this.state.dataSource[i]))
+        data.push([
+          this.state.dataSource[i].id,
+          this.state.dataSource[i].title,
+          this.state.dataSource[i].author,
+          this.state.dataSource[i].amount,
+          moment(this.state.dataSource[i].createAt).format('YYYY年MM月DD日 HH-mm-ss')
+        ])
+      }
+      //data数据导出格式是一个二维数据第一个数组是title
+      //第二数组是数据 Array of Arrays e.g. [["a","b"],[1,2]]
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
+      /* generate XLSX file and send to client */
+      XLSX.writeFile(wb, `articles-${this.state.offset / this.state.limited + 1}-${moment().format('YYYY-MM-DD-HH-mm-ss')}.xlsx`)
+    }
+
 
     render() {
         return (
             <div className="site-card-border-less-wrapper">
                 <Card title="Artilce list" 
                 bordered={false} 
-                extra={<Button>导出Excel</Button>}
+                extra={<Button onClick={this.toExcel}>导出Excel</Button>}
                 >
                   <Table 
                   dataSource={this.state.dataSource} 
                   columns={this.state.columns} 
-                  loading={false}
+                  //设置loading 
+                  loading={this.state.isLoading}
                   rowKey={record=>record.id}
                   pagination={{
+                      current:this.state.offset / this.state.limited + 1,
                       total:this.state.total,
                       hideOnSinglePage:true,
+                      showQuickJumper:true,
+                      showSizeChanger:true,
+                      onShowSizeChange:this.onShowSizeChange,
+                      onChange:this.onPageChange,
+                      pageSizeOptions:['10','15','20','30']
                   }}
                   />
                 </Card>
