@@ -16,13 +16,14 @@ service.interceptors.request.use(config=>{
 
 service.interceptors.response.use(resp=>{
     //console.log(resp)
-    if(resp.data.status === 200){
-        return resp.data.data
-    }else{
-        //全局处理错误
-        return message.error(resp.data.errMsg)
+    // if(resp.data.status === 200){
+    //     return resp.data
+    // }else{
+    //     //全局处理错误
+    //     return message.error(resp.data.errMsg)
         
-    }
+    // }
+    return resp.data
 })
 
 
@@ -32,4 +33,8 @@ export const getArtilces = (offset = 0,limited=10)=>{
         offset,
         limited
     })
+}
+//delete artilce throught id
+export const delArtById = (id)=>{
+    return service.delete(`/api/v1/article/delete/${id}`)
 }

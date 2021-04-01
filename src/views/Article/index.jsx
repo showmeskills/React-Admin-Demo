@@ -2,9 +2,9 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import XLSX from 'xlsx'
 
-import {Card,Tag,Table,Button} from 'antd'
+import {Card,Tag,Table,Button, Modal ,Typography,message} from 'antd'
 
-import {getArtilces} from '../../axios'
+import {getArtilces,delArtById} from '../../axios'
 //存放多个button 组件
 const ButtonGroup = Button.Group
 
@@ -28,9 +28,41 @@ export default class ArticleList extends Component {
         isLoading:false,
         offset:0,
         limited:10,
+        deleteArticlTitle:'',
+        isShowArticleModal:false,
+        deleteArticleConfirmLoading:false,
+        deleteArticleID:null,
     }
+
+
+
     createColumns = (columnKeys)=>{
-       
+      const showDeleteArticleModal=(record)=>{
+      //使用函数调用
+      // Modal.confirm({
+      //   title:`此操作不可逆,请谨慎!!!`,
+      //   content:<Typography>确定要删除<span style={{color:'red'}}>{record.title}</span>吗?</Typography>,
+      //   okText:'确定',
+      //   onCancel(){
+
+      //   },
+      //   onOk(){
+      //     delArt(record.id)
+      //       .then(resp=>{
+      //         if(resp.code === 200){
+      //           Modal.success({
+      //             content:resp.data.msg
+      //           })
+      //         }
+      //       })
+      //   }
+      // })
+      this.setState({
+        isShowArticleModal:true,
+        deleteArticlTitle:record.title,
+        deleteArticleID:record.id,
+      })  
+    }
     const columns = columnKeys.map(item=>{
        if(item==='amount'){
          return{
@@ -67,21 +99,25 @@ export default class ArticleList extends Component {
          key:item
        }
      })
+   
      //额外添加columns
      columns.push({
        title:'操作',
        key:'actions',
-       render(){
+       render(record){
         return(
           <ButtonGroup>
             <Button size="small" type='primary'>添加</Button>
-            <Button  size="small" type='danger'>删除</Button>
+            <Button  size="small" type='danger' onClick={()=>showDeleteArticleModal(record)}>删除</Button>
           </ButtonGroup>
         )
        }
      })
      return columns
+     
     }
+ 
+  
 
     //customize a function to request data
     getData=()=>{
@@ -90,11 +126,11 @@ export default class ArticleList extends Component {
       })
       getArtilces(this.state.offset,this.state.limited)
       .then(res=>{
-        const columnKeys = Object.keys(res.list[0])
+        const columnKeys = Object.keys(res.data.list[0])
         const columns = this.createColumns(columnKeys)
           this.setState({
-              total:res.total,
-              dataSource:res.list,
+              total:res.data.total,
+              dataSource:res.data.list,
               columns
           })
       })
@@ -158,7 +194,37 @@ export default class ArticleList extends Component {
       XLSX.writeFile(wb, `articles-${this.state.offset / this.state.limited + 1}-${moment().format('YYYY-MM-DD-HH-mm-ss')}.xlsx`)
     }
 
+    hiddenDeleteModal=()=>{
+        this.setState({
+          isShowArticleModal:false,
+          deleteArticlTitle:'',
+          deleteArticleConfirmLoading:false,
+        })
+    }
 
+    deleteArticle=()=>{
+        this.setState({
+          deleteArticleConfirmLoading:true,        
+        })
+        delArtById(this.state.deleteArticleID)
+          .then(resp=>{
+            //console.log(resp)
+            message.success(resp.data.msg);
+            //这里沟通的时候有坑,究竟是留在当前页，还是第一页
+            //返回第一页
+            this.setState({
+              offset:0
+            },()=>{
+              this.getData();
+            })
+          })
+          .finally(()=>{
+            this.setState({
+              deleteArticleConfirmLoading:false,
+              isShowArticleModal:false,
+            })
+          })
+    }
     render() {
         return (
             <div className="site-card-border-less-wrapper">
@@ -184,6 +250,15 @@ export default class ArticleList extends Component {
                   }}
                   />
                 </Card>
+                <Modal
+                  title='此操作不可逆，请谨慎!!!'
+                  visible={this.state.isShowArticleModal}  
+                  onCancel = {this.hiddenDeleteModal}
+                  confirmLoading = {this.state.deleteArticleConfirmLoading}
+                  onOk={this.deleteArticle}
+                >
+                 <Typography>确定要删除<span style={{color:'red'}}>{this.state.deleteArticlTitle}</span>吗?</Typography>
+                </Modal>
             </div>
         )
     }
