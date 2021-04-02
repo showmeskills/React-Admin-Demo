@@ -18,7 +18,7 @@ class App extends Component{
                                         key={route.pathname}
                                         path={route.pathname}
                                         exact={route.exact}
-                                        render={(propsRoute)=>{
+                                        render={propsRoute=>{
                                             return <route.component {...propsRoute}/>
                                         }}
                                     />

@@ -13,13 +13,17 @@ render(
     <ConfigProvider locale={zhCN}>
         <Router>
             <Switch>
-            <Route path='/admin' render={(routeProps)=>{
+            <Route path='/admin' render={routeProps=>{
                 //TODO:需要登录才能访问/admin(requirements of authorities to access admin page)
                 return <App {...routeProps}/>
             }}/>
             {
                 mainRoutes.map(route=>{
-                    return <Route key={route.pathname} path={route.pathname} component={route.component}/>
+                    return <
+                        Route key={route.pathname} 
+                        path={route.pathname} 
+                        component={route.component}
+                    />
                 })
             }
             <Redirect to='/admin' from='/' exact />

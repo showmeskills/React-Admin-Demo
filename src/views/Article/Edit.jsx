@@ -1,11 +1,21 @@
 import React, { Component } from 'react'
+import {Card,Button} from 'antd';
+import {withRouter} from 'react-router-dom';
+@withRouter
 
-export default class Edit extends Component {
+class Edit extends Component {
     render() {
         return (
-            <div>
-                article edition
-            </div>
+            <Card 
+                title='Article Edition'
+                bordered={false}
+                extra={
+                    <Button>取消</Button>
+                }
+            >
+            </Card>
         )
     }
 }
+
+export default Edit
